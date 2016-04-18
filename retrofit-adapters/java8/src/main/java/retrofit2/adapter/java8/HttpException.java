@@ -31,7 +31,7 @@ public final class HttpException extends Exception {
   }
 
   /** HTTP status code. */
-  public int code() {
+  public int getCode() {
     return code;
   }
 
@@ -43,7 +43,7 @@ public final class HttpException extends Exception {
   /**
    * The full HTTP response. This may be null if the exception was serialized.
    */
-  public Response<?> response() {
+  public Response<?> getResponse() {
     return response;
   }
 }

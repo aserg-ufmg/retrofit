@@ -17,6 +17,8 @@ package retrofit2.converter.simplexml;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+
+import okhttp3.MediaType;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import org.simpleframework.xml.Serializer;
@@ -53,6 +55,8 @@ public final class SimpleXmlConverterFactory extends Converter.Factory {
 
   private final Serializer serializer;
   private final boolean strict;
+static final MediaType MEDIA_TYPE = MediaType.parse("application/xml; charset=UTF-8");
+static final String CHARSET = "UTF-8";
 
   private SimpleXmlConverterFactory(Serializer serializer, boolean strict) {
     if (serializer == null) throw new NullPointerException("serializer == null");

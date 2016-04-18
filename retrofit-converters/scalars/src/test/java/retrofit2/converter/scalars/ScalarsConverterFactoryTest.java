@@ -23,10 +23,11 @@ import okhttp3.mockwebserver.RecordedRequest;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+
 import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
-import retrofit2.converter.scalars.ScalarsConverterFactory;
+import retrofit2.converter.scalars.main.ScalarsConverterFactory;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
 import retrofit2.http.POST;

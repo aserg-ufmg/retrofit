@@ -25,7 +25,11 @@ import okhttp3.RequestBody;
 import static retrofit2.Utils.checkNotNull;
 
 abstract class ParameterHandler<T> {
-  abstract void apply(RequestBuilder builder, T value) throws IOException;
+  protected String name;
+protected Headers headers;
+protected String transferEncoding;
+
+abstract void apply(RequestBuilder builder, T value) throws IOException;
 
   final ParameterHandler<Iterable<T>> iterable() {
     return new ParameterHandler<Iterable<T>>() {
@@ -59,27 +63,25 @@ abstract class ParameterHandler<T> {
   }
 
   static final class Header<T> extends ParameterHandler<T> {
-    private final String name;
     private final Converter<T, String> valueConverter;
 
     Header(String name, Converter<T, String> valueConverter) {
-      this.name = checkNotNull(name, "name == null");
+      name = checkNotNull(name, "name == null");
       this.valueConverter = valueConverter;
     }
 
     @Override void apply(RequestBuilder builder, T value) throws IOException {
       if (value == null) return; // Skip null values.
-      builder.addHeader(name, valueConverter.convert(value));
+      builder.addHeaderToRequestBuilder(name, valueConverter.convert(value));
     }
   }
 
   static final class Path<T> extends ParameterHandler<T> {
-    private final String name;
     private final Converter<T, String> valueConverter;
     private final boolean encoded;
 
     Path(String name, Converter<T, String> valueConverter, boolean encoded) {
-      this.name = checkNotNull(name, "name == null");
+      name = checkNotNull(name, "name == null");
       this.valueConverter = valueConverter;
       this.encoded = encoded;
     }
@@ -89,24 +91,23 @@ abstract class ParameterHandler<T> {
         throw new IllegalArgumentException(
             "Path parameter \"" + name + "\" value must not be null.");
       }
-      builder.addPathParam(name, valueConverter.convert(value), encoded);
+      builder.addPathParamNameAndValue(name, valueConverter.convert(value), encoded);
     }
   }
 
   static final class Query<T> extends ParameterHandler<T> {
-    private final String name;
     private final Converter<T, String> valueConverter;
     private final boolean encoded;
 
     Query(String name, Converter<T, String> valueConverter, boolean encoded) {
-      this.name = checkNotNull(name, "name == null");
+      name = checkNotNull(name, "name == null");
       this.valueConverter = valueConverter;
       this.encoded = encoded;
     }
 
     @Override void apply(RequestBuilder builder, T value) throws IOException {
       if (value == null) return; // Skip null values.
-      builder.addQueryParam(name, valueConverter.convert(value), encoded);
+      builder.addQueryParamNameAndValue(name, valueConverter.convert(value), encoded);
     }
   }
 
@@ -134,18 +135,17 @@ abstract class ParameterHandler<T> {
           throw new IllegalArgumentException(
               "Query map contained null value for key '" + entryKey + "'.");
         }
-        builder.addQueryParam(entryKey, valueConverter.convert(entryValue), encoded);
+        builder.addQueryParamNameAndValue(entryKey, valueConverter.convert(entryValue), encoded);
       }
     }
   }
 
   static final class Field<T> extends ParameterHandler<T> {
-    private final String name;
     private final Converter<T, String> valueConverter;
     private final boolean encoded;
 
     Field(String name, Converter<T, String> valueConverter, boolean encoded) {
-      this.name = checkNotNull(name, "name == null");
+      name = checkNotNull(name, "name == null");
       this.valueConverter = valueConverter;
       this.encoded = encoded;
     }
@@ -186,25 +186,28 @@ abstract class ParameterHandler<T> {
   }
 
   static final class Part<T> extends ParameterHandler<T> {
-    private final Headers headers;
     private final Converter<T, RequestBody> converter;
 
     Part(Headers headers, Converter<T, RequestBody> converter) {
-      this.headers = headers;
+      super.headers = headers;
       this.converter = converter;
     }
 
     @Override void apply(RequestBuilder builder, T value) {
       if (value == null) return; // Skip null values.
 
-      RequestBody body;
-      try {
-        body = converter.convert(value);
-      } catch (IOException e) {
-        throw new RuntimeException("Unable to convert " + value + " to RequestBody", e);
-      }
-      builder.addPart(headers, body);
+      createBody(builder, value);
     }
+
+	private void createBody(RequestBuilder builder, T value) {
+		RequestBody body;
+		  try {
+		    body = converter.convert(value);
+		  } catch (IOException e) {
+		    throw new RuntimeException("Unable to convert " + value + " to RequestBody", e);
+		  }
+		  builder.addPart(headers, body);
+	}
   }
 
   static final class RawPart extends ParameterHandler<MultipartBody.Part> {
@@ -222,11 +225,9 @@ abstract class ParameterHandler<T> {
 
   static final class PartMap<T> extends ParameterHandler<Map<String, T>> {
     private final Converter<T, RequestBody> valueConverter;
-    private final String transferEncoding;
-
     PartMap(Converter<T, RequestBody> valueConverter, String transferEncoding) {
       this.valueConverter = valueConverter;
-      this.transferEncoding = transferEncoding;
+      super.transferEncoding = transferEncoding;
     }
 
     @Override void apply(RequestBuilder builder, Map<String, T> value) throws IOException {
@@ -265,13 +266,17 @@ abstract class ParameterHandler<T> {
       if (value == null) {
         throw new IllegalArgumentException("Body parameter value must not be null.");
       }
-      RequestBody body;
-      try {
-        body = converter.convert(value);
-      } catch (IOException e) {
-        throw new RuntimeException("Unable to convert " + value + " to RequestBody", e);
-      }
-      builder.setBody(body);
+      createBody(builder, value);
     }
+
+	private void createBody(RequestBuilder builder, T value) {
+		RequestBody body;
+		  try {
+		    body = converter.convert(value);
+		  } catch (IOException e) {
+		    throw new RuntimeException("Unable to convert " + value + " to RequestBody", e);
+		  }
+		  builder.setBody(body);
+	}
   }
 }

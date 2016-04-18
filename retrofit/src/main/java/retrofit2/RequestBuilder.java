@@ -73,7 +73,7 @@ final class RequestBuilder {
     this.relativeUrl = relativeUrl.toString();
   }
 
-  void addHeader(String name, String value) {
+  void addHeaderToRequestBuilder(String name, String value) {
     if ("Content-Type".equalsIgnoreCase(name)) {
       contentType = MediaType.parse(value);
     } else {
@@ -81,7 +81,7 @@ final class RequestBuilder {
     }
   }
 
-  void addPathParam(String name, String value, boolean encoded) {
+  void addPathParamNameAndValue(String name, String value, boolean encoded) {
     if (relativeUrl == null) {
       // The relative URL is cleared when the first query parameter is set.
       throw new AssertionError();
@@ -138,7 +138,7 @@ final class RequestBuilder {
     }
   }
 
-  void addQueryParam(String name, String value, boolean encoded) {
+  void addQueryParamNameAndValue(String name, String value, boolean encoded) {
     if (relativeUrl != null) {
       // Do a one-time combination of the built relative URL and the base URL.
       urlBuilder = baseUrl.newBuilder(relativeUrl);
@@ -183,11 +183,7 @@ final class RequestBuilder {
       url = urlBuilder.build();
     } else {
       // No query parameters triggered builder creation, just combine the relative URL and base URL.
-      url = baseUrl.resolve(relativeUrl);
-      if (url == null) {
-        throw new IllegalArgumentException(
-            "Malformed URL. Base: " + baseUrl + ", Relative: " + relativeUrl);
-      }
+      url = createURL();
     }
 
     RequestBody body = this.body;
@@ -217,6 +213,16 @@ final class RequestBuilder {
         .method(method, body)
         .build();
   }
+
+private HttpUrl createURL() {
+	HttpUrl url;
+	url = baseUrl.resolve(relativeUrl);
+      if (url == null) {
+        throw new IllegalArgumentException(
+            "Malformed URL. Base: " + baseUrl + ", Relative: " + relativeUrl);
+      }
+	return url;
+}
 
   private static class ContentTypeOverridingRequestBody extends RequestBody {
     private final RequestBody delegate;

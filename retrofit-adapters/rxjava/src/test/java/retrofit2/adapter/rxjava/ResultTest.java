@@ -18,7 +18,7 @@ package retrofit2.adapter.rxjava;
 import java.io.IOException;
 import org.junit.Test;
 import retrofit2.Response;
-import retrofit2.adapter.rxjava.Result;
+import retrofit2.adapter.rxjava.RequestResult;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
@@ -26,7 +26,7 @@ import static org.junit.Assert.fail;
 public final class ResultTest {
   @Test public void response() {
     Response<String> response = Response.success("Hi");
-    Result<String> result = Result.response(response);
+    RequestResult<String> result = RequestResult.response(response);
     assertThat(result.isError()).isFalse();
     assertThat(result.error()).isNull();
     assertThat(result.response()).isSameAs(response);
@@ -34,7 +34,7 @@ public final class ResultTest {
 
   @Test public void nullResponseThrows() {
     try {
-      Result.response(null);
+      RequestResult.response(null);
       fail();
     } catch (NullPointerException e) {
       assertThat(e).hasMessage("response == null");
@@ -43,7 +43,7 @@ public final class ResultTest {
 
   @Test public void error() {
     Throwable error = new IOException();
-    Result<Object> result = Result.error(error);
+    RequestResult<Object> result = RequestResult.error(error);
     assertThat(result.isError()).isTrue();
     assertThat(result.error()).isSameAs(error);
     assertThat(result.response()).isNull();
@@ -51,7 +51,7 @@ public final class ResultTest {
 
   @Test public void nullErrorThrows() {
     try {
-      Result.error(null);
+      RequestResult.error(null);
       fail();
     } catch (NullPointerException e) {
       assertThat(e).hasMessage("error == null");

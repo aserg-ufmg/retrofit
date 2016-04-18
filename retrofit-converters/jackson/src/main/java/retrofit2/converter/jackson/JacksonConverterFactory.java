@@ -21,6 +21,8 @@ import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+
+import okhttp3.MediaType;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import retrofit2.Converter;
@@ -46,6 +48,7 @@ public final class JacksonConverterFactory extends Converter.Factory {
   }
 
   private final ObjectMapper mapper;
+static final MediaType MEDIA_TYPE = MediaType.parse("application/json; charset=UTF-8");
 
   private JacksonConverterFactory(ObjectMapper mapper) {
     if (mapper == null) throw new NullPointerException("mapper == null");
@@ -57,7 +60,7 @@ public final class JacksonConverterFactory extends Converter.Factory {
       Retrofit retrofit) {
     JavaType javaType = mapper.getTypeFactory().constructType(type);
     ObjectReader reader = mapper.reader(javaType);
-    return new JacksonResponseBodyConverter<>(reader);
+    return new JacksonResponseConverter<>(reader);
   }
 
   @Override
@@ -65,6 +68,6 @@ public final class JacksonConverterFactory extends Converter.Factory {
       Annotation[] parameterAnnotations, Annotation[] methodAnnotations, Retrofit retrofit) {
     JavaType javaType = mapper.getTypeFactory().constructType(type);
     ObjectWriter writer = mapper.writerWithType(javaType);
-    return new JacksonRequestBodyConverter<>(writer);
+    return new JacksonRequestConverter<>(writer);
   }
 }

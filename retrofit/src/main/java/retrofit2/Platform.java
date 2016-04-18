@@ -18,6 +18,9 @@ package retrofit2;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
+import okhttp3.OkHttpClient;
+import retrofit2.Retrofit.Builder;
+
 import java.lang.invoke.MethodHandles.Lookup;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -26,10 +29,10 @@ import java.util.concurrent.Executor;
 import org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement;
 
 class Platform {
-  private static final Platform PLATFORM = findPlatform();
+  
 
   static Platform get() {
-    return PLATFORM;
+    return findPlatform();
   }
 
   private static Platform findPlatform() {
@@ -73,8 +76,26 @@ class Platform {
     throw new UnsupportedOperationException();
   }
 
-  @IgnoreJRERequirement // Only classloaded and used on Java 8.
+  Executor createCallBackExecutor(Builder builder) {
+	Executor callbackExecutor = builder.callbackExecutor;
+	  if (callbackExecutor == null) {
+	    callbackExecutor = defaultCallbackExecutor();
+	  }
+	return callbackExecutor;
+}
+
+okhttp3.Call.Factory createCallFactory(Builder builder) {
+	okhttp3.Call.Factory callFactory = builder.callFactory;
+	  if (callFactory == null) {
+	    callFactory = new OkHttpClient();
+	  }
+	return callFactory;
+}
+
+@IgnoreJRERequirement // Only classloaded and used on Java 8.
   static class Java8 extends Platform {
+	private static final Platform PLATFORM = findPlatform();
+	
     @Override boolean isDefaultMethod(Method method) {
       return method.isDefault();
     }
@@ -93,6 +114,7 @@ class Platform {
   }
 
   static class Android extends Platform {
+	  private static final Platform PLATFORM = findPlatform();
     @Override public Executor defaultCallbackExecutor() {
       return new MainThreadExecutor();
     }
@@ -111,6 +133,7 @@ class Platform {
   }
 
   static class IOS extends Platform {
+	  private static final Platform PLATFORM = findPlatform();
     @Override public Executor defaultCallbackExecutor() {
       return new MainThreadExecutor();
     }

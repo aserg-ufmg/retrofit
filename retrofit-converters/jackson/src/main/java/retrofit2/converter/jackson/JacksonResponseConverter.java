@@ -13,23 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package retrofit2.converter.moshi;
+package retrofit2.converter.jackson;
 
-import com.squareup.moshi.JsonAdapter;
+import com.fasterxml.jackson.databind.ObjectReader;
 import java.io.IOException;
 import okhttp3.ResponseBody;
 import retrofit2.Converter;
 
-final class MoshiResponseBodyConverter<T> implements Converter<ResponseBody, T> {
-  private final JsonAdapter<T> adapter;
+final class JacksonResponseConverter<T> implements Converter<ResponseBody, T> {
+  private final ObjectReader adapter;
 
-  MoshiResponseBodyConverter(JsonAdapter<T> adapter) {
+  JacksonResponseConverter(ObjectReader adapter) {
     this.adapter = adapter;
   }
 
   @Override public T convert(ResponseBody value) throws IOException {
     try {
-      return adapter.fromJson(value.source());
+      return adapter.readValue(value.charStream());
     } finally {
       value.close();
     }

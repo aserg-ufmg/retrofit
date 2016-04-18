@@ -16,6 +16,7 @@
 package retrofit2;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
 /**
@@ -31,8 +32,12 @@ final class DefaultCallAdapterFactory extends CallAdapter.Factory {
     if (getRawType(returnType) != Call.class) {
       return null;
     }
+	if (!(returnType instanceof ParameterizedType)) {
+	  throw new IllegalArgumentException(
+	      "Call return type must be parameterized as Call<Foo> or Call<? extends Foo>");
+	}
 
-    final Type responseType = Utils.getCallResponseType(returnType);
+    final Type responseType = Utils.getParameterUpperBound(0, (ParameterizedType) returnType);
     return new CallAdapter<Call<?>>() {
       @Override public Type responseType() {
         return responseType;

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package retrofit2.converter.scalars;
+package retrofit2.converter.scalars.main;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
@@ -21,15 +21,15 @@ import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import retrofit2.Converter;
 import retrofit2.Retrofit;
-import retrofit2.converter.scalars.ScalarResponseBodyConverters.BooleanResponseBodyConverter;
-import retrofit2.converter.scalars.ScalarResponseBodyConverters.ByteResponseBodyConverter;
-import retrofit2.converter.scalars.ScalarResponseBodyConverters.CharacterResponseBodyConverter;
-import retrofit2.converter.scalars.ScalarResponseBodyConverters.DoubleResponseBodyConverter;
-import retrofit2.converter.scalars.ScalarResponseBodyConverters.FloatResponseBodyConverter;
-import retrofit2.converter.scalars.ScalarResponseBodyConverters.IntegerResponseBodyConverter;
-import retrofit2.converter.scalars.ScalarResponseBodyConverters.LongResponseBodyConverter;
-import retrofit2.converter.scalars.ScalarResponseBodyConverters.ShortResponseBodyConverter;
-import retrofit2.converter.scalars.ScalarResponseBodyConverters.StringResponseBodyConverter;
+import retrofit2.converter.scalars.main.ScalarResponseBodyConverters.BooleanResponseBodyConverter;
+import retrofit2.converter.scalars.main.ScalarResponseBodyConverters.ByteResponseBodyConverter;
+import retrofit2.converter.scalars.main.ScalarResponseBodyConverters.CharacterResponseBodyConverter;
+import retrofit2.converter.scalars.main.ScalarResponseBodyConverters.DoubleResponseBodyConverter;
+import retrofit2.converter.scalars.main.ScalarResponseBodyConverters.FloatResponseBodyConverter;
+import retrofit2.converter.scalars.main.ScalarResponseBodyConverters.IntegerResponseBodyConverter;
+import retrofit2.converter.scalars.main.ScalarResponseBodyConverters.LongResponseBodyConverter;
+import retrofit2.converter.scalars.main.ScalarResponseBodyConverters.ShortResponseBodyConverter;
+import retrofit2.converter.scalars.main.ScalarResponseBodyConverters.StringResponseBodyConverter;
 
 /**
  * A {@linkplain Converter.Factory converter} for strings and both primitives and their boxed types

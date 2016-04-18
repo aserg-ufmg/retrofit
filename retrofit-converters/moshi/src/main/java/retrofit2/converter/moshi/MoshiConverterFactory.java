@@ -64,7 +64,7 @@ public final class MoshiConverterFactory extends Converter.Factory {
     if (lenient) {
       adapter = adapter.lenient();
     }
-    return new MoshiResponseBodyConverter<>(adapter);
+    return new MoshiResponseConverter<>(adapter);
   }
 
   @Override
@@ -74,6 +74,6 @@ public final class MoshiConverterFactory extends Converter.Factory {
     if (lenient) {
       adapter = adapter.lenient();
     }
-    return new MoshiRequestBodyConverter<>(adapter);
+    return new MoshiRequestConverter<>(adapter);
   }
 }

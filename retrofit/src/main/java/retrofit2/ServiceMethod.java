@@ -116,7 +116,16 @@ final class ServiceMethod<T> {
     return responseConverter.convert(body);
   }
 
-  /**
+  okhttp3.Call createRawCall(OkHttpCall okHttpCall) throws IOException {
+    Request request = okHttpCall.serviceMethod.toRequest(okHttpCall.args);
+    okhttp3.Call call = okHttpCall.serviceMethod.callFactory.newCall(request);
+    if (call == null) {
+      throw new NullPointerException("Call.Factory returned null.");
+    }
+    return call;
+  }
+
+/**
    * Inspects the annotations on an interface method to construct a reusable service method. This
    * requires potentially-expensive reflection so it is best to build each service method only once
    * and reuse it. Builders cannot be reused.
@@ -156,7 +165,7 @@ final class ServiceMethod<T> {
     }
 
     public ServiceMethod build() {
-      callAdapter = createCallAdapter();
+      callAdapter = retrofit.createCallAdapter(this);
       responseType = callAdapter.responseType();
       if (responseType == Response.class || responseType == okhttp3.Response.class) {
         throw methodError("'"
@@ -215,23 +224,6 @@ final class ServiceMethod<T> {
       }
 
       return new ServiceMethod<>(this);
-    }
-
-    private CallAdapter<?> createCallAdapter() {
-      Type returnType = method.getGenericReturnType();
-      if (Utils.hasUnresolvableType(returnType)) {
-        throw methodError(
-            "Method return type must not include a type variable or wildcard: %s", returnType);
-      }
-      if (returnType == void.class) {
-        throw methodError("Service methods cannot return void.");
-      }
-      Annotation[] annotations = method.getAnnotations();
-      try {
-        return retrofit.callAdapter(returnType, annotations);
-      } catch (RuntimeException e) { // Wide exception range because factories are user code.
-        throw methodError(e, "Unable to create call adapter for %s", returnType);
-      }
     }
 
     private void parseMethodAnnotation(Annotation annotation) {
@@ -653,11 +645,11 @@ final class ServiceMethod<T> {
       }
     }
 
-    private RuntimeException methodError(String message, Object... args) {
+    RuntimeException methodError(String message, Object... args) {
       return methodError(null, message, args);
     }
 
-    private RuntimeException methodError(Throwable cause, String message, Object... args) {
+    RuntimeException methodError(Throwable cause, String message, Object... args) {
       message = String.format(message, args);
       return new IllegalArgumentException(message
           + "\n    for method "

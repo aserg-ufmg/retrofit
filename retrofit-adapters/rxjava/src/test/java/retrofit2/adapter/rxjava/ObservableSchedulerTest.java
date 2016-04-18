@@ -33,7 +33,7 @@ public final class ObservableSchedulerTest {
   interface Service {
     @GET("/") Observable<String> body();
     @GET("/") Observable<Response<String>> response();
-    @GET("/") Observable<Result<String>> result();
+    @GET("/") Observable<RequestResult<String>> result();
   }
 
   private final TestScheduler scheduler = new TestScheduler();
@@ -77,7 +77,7 @@ public final class ObservableSchedulerTest {
   @Test public void resultUsesScheduler() {
     server.enqueue(new MockResponse().setBody("Hi"));
 
-    TestSubscriber<Result<String>> subscriber = new TestSubscriber<>();
+    TestSubscriber<RequestResult<String>> subscriber = new TestSubscriber<>();
     service.result().subscribe(subscriber);
     subscriber.assertNoValues();
     subscriber.assertNoTerminalEvent();

@@ -13,25 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package retrofit2.converter.jackson;
+package retrofit2.converter.moshi;
 
-import com.fasterxml.jackson.databind.ObjectWriter;
+import com.squareup.moshi.JsonAdapter;
 import java.io.IOException;
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
+import okio.Buffer;
 import retrofit2.Converter;
 
-final class JacksonRequestBodyConverter<T> implements Converter<T, RequestBody> {
+final class MoshiRequestConverter<T> implements Converter<T, RequestBody> {
   private static final MediaType MEDIA_TYPE = MediaType.parse("application/json; charset=UTF-8");
 
-  private final ObjectWriter adapter;
+  private final JsonAdapter<T> adapter;
 
-  JacksonRequestBodyConverter(ObjectWriter adapter) {
+  MoshiRequestConverter(JsonAdapter<T> adapter) {
     this.adapter = adapter;
   }
 
   @Override public RequestBody convert(T value) throws IOException {
-    byte[] bytes = adapter.writeValueAsBytes(value);
-    return RequestBody.create(MEDIA_TYPE, bytes);
+    Buffer buffer = new Buffer();
+    adapter.toJson(buffer, value);
+    return RequestBody.create(MEDIA_TYPE, buffer.readByteString());
   }
 }

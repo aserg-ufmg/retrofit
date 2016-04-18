@@ -37,7 +37,7 @@ public final class SingleTest {
   interface Service {
     @GET("/") Single<String> body();
     @GET("/") Single<Response<String>> response();
-    @GET("/") Single<Result<String>> result();
+    @GET("/") Single<RequestResult<String>> result();
   }
 
   private Service service;
@@ -116,8 +116,8 @@ public final class SingleTest {
   @Test public void resultSuccess200() {
     server.enqueue(new MockResponse().setBody("Hi"));
 
-    BlockingSingle<Result<String>> o = service.result().toBlocking();
-    Result<String> result = o.value();
+    BlockingSingle<RequestResult<String>> o = service.result().toBlocking();
+    RequestResult<String> result = o.value();
     assertThat(result.isError()).isFalse();
     Response<String> response = result.response();
     assertThat(response.isSuccessful()).isTrue();
@@ -127,8 +127,8 @@ public final class SingleTest {
   @Test public void resultSuccess404() throws IOException {
     server.enqueue(new MockResponse().setResponseCode(404).setBody("Hi"));
 
-    BlockingSingle<Result<String>> o = service.result().toBlocking();
-    Result<String> result = o.value();
+    BlockingSingle<RequestResult<String>> o = service.result().toBlocking();
+    RequestResult<String> result = o.value();
     assertThat(result.isError()).isFalse();
     Response<String> response = result.response();
     assertThat(response.isSuccessful()).isFalse();
@@ -138,8 +138,8 @@ public final class SingleTest {
   @Test public void resultFailure() {
     server.enqueue(new MockResponse().setSocketPolicy(DISCONNECT_AFTER_REQUEST));
 
-    BlockingSingle<Result<String>> o = service.result().toBlocking();
-    Result<String> result = o.value();
+    BlockingSingle<RequestResult<String>> o = service.result().toBlocking();
+    RequestResult<String> result = o.value();
     assertThat(result.isError()).isTrue();
     assertThat(result.error()).isInstanceOf(IOException.class);
   }

@@ -29,6 +29,7 @@ import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
+import retrofit2.Retrofit.Builder;
 import retrofit2.http.GET;
 import retrofit2.http.HTTP;
 import retrofit2.http.Header;
@@ -125,7 +126,15 @@ public final class Retrofit {
    */
   @SuppressWarnings("unchecked") // Single-interface proxy creation guarded by parameter safety.
   public <T> T create(final Class<T> service) {
-    Utils.validateServiceInterface(service);
+    if (!service.isInterface()) {
+	  throw new IllegalArgumentException("API declarations must be interfaces.");
+	}
+	// Prevent API interfaces from extending other interfaces. This not only avoids a bug in
+	// Android (http://b.android.com/58753) but it forces composition of API declarations which is
+	// the recommended pattern.
+	if (service.getInterfaces().length > 0) {
+	  throw new IllegalArgumentException("API interfaces must not extend other interfaces.");
+	}
     if (validateEagerly) {
       eagerlyValidateMethods(service);
     }
@@ -376,7 +385,24 @@ public final class Retrofit {
     return callbackExecutor;
   }
 
-  /**
+  CallAdapter<?> createCallAdapter(retrofit2.ServiceMethod.Builder builder) {
+  Type returnType = builder.method.getGenericReturnType();
+  if (Utils.hasUnresolvableType(returnType)) {
+    throw builder.methodError(
+        "Method return type must not include a type variable or wildcard: %s", returnType);
+  }
+  if (returnType == void.class) {
+    throw builder.methodError("Service methods cannot return void.");
+  }
+  Annotation[] annotations = builder.method.getAnnotations();
+  try {
+    return builder.retrofit.callAdapter(returnType, annotations);
+  } catch (RuntimeException e) { // Wide exception range because factories are user code.
+    throw builder.methodError(e, "Unable to create call adapter for %s", returnType);
+  }
+}
+
+/**
    * Build a new {@link Retrofit}.
    * <p>
    * Calling {@link #baseUrl} is required before calling {@link #build()}. All other methods
@@ -384,11 +410,11 @@ public final class Retrofit {
    */
   public static final class Builder {
     private Platform platform;
-    private okhttp3.Call.Factory callFactory;
+    okhttp3.Call.Factory callFactory;
     private HttpUrl baseUrl;
     private List<Converter.Factory> converterFactories = new ArrayList<>();
     private List<CallAdapter.Factory> adapterFactories = new ArrayList<>();
-    private Executor callbackExecutor;
+    Executor callbackExecutor;
     private boolean validateEagerly;
 
     Builder(Platform platform) {
@@ -546,15 +572,9 @@ public final class Retrofit {
         throw new IllegalStateException("Base URL required.");
       }
 
-      okhttp3.Call.Factory callFactory = this.callFactory;
-      if (callFactory == null) {
-        callFactory = new OkHttpClient();
-      }
+      okhttp3.Call.Factory callFactory = platform.createCallFactory(this);
 
-      Executor callbackExecutor = this.callbackExecutor;
-      if (callbackExecutor == null) {
-        callbackExecutor = platform.defaultCallbackExecutor();
-      }
+      Executor callbackExecutor = platform.createCallBackExecutor(Builder.this);
 
       // Make a defensive copy of the adapters and add the default Call adapter.
       List<CallAdapter.Factory> adapterFactories = new ArrayList<>(this.adapterFactories);

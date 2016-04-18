@@ -25,11 +25,11 @@ import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
 import java.util.Arrays;
-import java.util.NoSuchElementException;
+
 import okhttp3.ResponseBody;
 import okio.Buffer;
 
-final class Utils {
+final class Utils extends SuperUtils {
   static final Type[] EMPTY_TYPE_ARRAY = new Type[0];
 
   private Utils() {
@@ -69,47 +69,6 @@ final class Utils {
     }
   }
 
-  /** Returns true if {@code a} and {@code b} are equal. */
-  public static boolean equals(Type a, Type b) {
-    if (a == b) {
-      return true; // Also handles (a == null && b == null).
-
-    } else if (a instanceof Class) {
-      return a.equals(b); // Class already specifies equals().
-
-    } else if (a instanceof ParameterizedType) {
-      if (!(b instanceof ParameterizedType)) return false;
-      ParameterizedType pa = (ParameterizedType) a;
-      ParameterizedType pb = (ParameterizedType) b;
-      return equal(pa.getOwnerType(), pb.getOwnerType())
-          && pa.getRawType().equals(pb.getRawType())
-          && Arrays.equals(pa.getActualTypeArguments(), pb.getActualTypeArguments());
-
-    } else if (a instanceof GenericArrayType) {
-      if (!(b instanceof GenericArrayType)) return false;
-      GenericArrayType ga = (GenericArrayType) a;
-      GenericArrayType gb = (GenericArrayType) b;
-      return equals(ga.getGenericComponentType(), gb.getGenericComponentType());
-
-    } else if (a instanceof WildcardType) {
-      if (!(b instanceof WildcardType)) return false;
-      WildcardType wa = (WildcardType) a;
-      WildcardType wb = (WildcardType) b;
-      return Arrays.equals(wa.getUpperBounds(), wb.getUpperBounds())
-          && Arrays.equals(wa.getLowerBounds(), wb.getLowerBounds());
-
-    } else if (a instanceof TypeVariable) {
-      if (!(b instanceof TypeVariable)) return false;
-      TypeVariable<?> va = (TypeVariable<?>) a;
-      TypeVariable<?> vb = (TypeVariable<?>) b;
-      return va.getGenericDeclaration() == vb.getGenericDeclaration()
-          && va.getName().equals(vb.getName());
-
-    } else {
-      return false; // This isn't a type we support!
-    }
-  }
-
   /**
    * Returns the generic supertype for {@code supertype}. For example, given a class {@code
    * IntegerSet}, the result for when supertype is {@code Set.class} is {@code Set<Integer>} and the
@@ -145,25 +104,6 @@ final class Utils {
 
     // We can't resolve this further.
     return toResolve;
-  }
-
-  private static int indexOf(Object[] array, Object toFind) {
-    for (int i = 0; i < array.length; i++) {
-      if (toFind.equals(array[i])) return i;
-    }
-    throw new NoSuchElementException();
-  }
-
-  private static boolean equal(Object a, Object b) {
-    return a == b || (a != null && a.equals(b));
-  }
-
-  static int hashCodeOrZero(Object o) {
-    return o != null ? o.hashCode() : 0;
-  }
-
-  public static String typeToString(Type type) {
-    return type instanceof Class ? ((Class<?>) type).getName() : type.toString();
   }
 
   /**
@@ -251,33 +191,19 @@ final class Utils {
 
   private static Type resolveTypeVariable(
       Type context, Class<?> contextRawType, TypeVariable<?> unknown) {
-    Class<?> declaredByRaw = declaringClassOf(unknown);
+    GenericDeclaration genericDeclaration = unknown.getGenericDeclaration();
+	Class<?> declaredByRaw = genericDeclaration instanceof Class ? (Class<?>) genericDeclaration : null;
 
     // We can't reduce this further.
     if (declaredByRaw == null) return unknown;
 
     Type declaredBy = getGenericSupertype(context, contextRawType, declaredByRaw);
     if (declaredBy instanceof ParameterizedType) {
-      int index = indexOf(declaredByRaw.getTypeParameters(), unknown);
+      int index = IndexSearch.indexOf(declaredByRaw.getTypeParameters(), unknown);
       return ((ParameterizedType) declaredBy).getActualTypeArguments()[index];
     }
 
     return unknown;
-  }
-
-  /**
-   * Returns the declaring class of {@code typeVariable}, or {@code null} if it was not declared by
-   * a class.
-   */
-  private static Class<?> declaringClassOf(TypeVariable<?> typeVariable) {
-    GenericDeclaration genericDeclaration = typeVariable.getGenericDeclaration();
-    return genericDeclaration instanceof Class ? (Class<?>) genericDeclaration : null;
-  }
-
-  static void checkNotPrimitive(Type type) {
-    if (type instanceof Class<?> && ((Class<?>) type).isPrimitive()) {
-      throw new IllegalArgumentException();
-    }
   }
 
   static <T> T checkNotNull(T object, String message) {
@@ -302,18 +228,6 @@ final class Utils {
     Buffer buffer = new Buffer();
     body.source().readAll(buffer);
     return ResponseBody.create(body.contentType(), body.contentLength(), buffer);
-  }
-
-  static <T> void validateServiceInterface(Class<T> service) {
-    if (!service.isInterface()) {
-      throw new IllegalArgumentException("API declarations must be interfaces.");
-    }
-    // Prevent API interfaces from extending other interfaces. This not only avoids a bug in
-    // Android (http://b.android.com/58753) but it forces composition of API declarations which is
-    // the recommended pattern.
-    if (service.getInterfaces().length > 0) {
-      throw new IllegalArgumentException("API interfaces must not extend other interfaces.");
-    }
   }
 
   static Type getParameterUpperBound(int index, ParameterizedType type) {
@@ -356,14 +270,6 @@ final class Utils {
         + "GenericArrayType, but <" + type + "> is of type " + className);
   }
 
-  static Type getCallResponseType(Type returnType) {
-    if (!(returnType instanceof ParameterizedType)) {
-      throw new IllegalArgumentException(
-          "Call return type must be parameterized as Call<Foo> or Call<? extends Foo>");
-    }
-    return getParameterUpperBound(0, (ParameterizedType) returnType);
-  }
-
   private static final class ParameterizedTypeImpl implements ParameterizedType {
     private final Type ownerType;
     private final Type rawType;
@@ -382,7 +288,9 @@ final class Utils {
 
       for (Type typeArgument : this.typeArguments) {
         if (typeArgument == null) throw new NullPointerException();
-        checkNotPrimitive(typeArgument);
+        if (typeArgument instanceof Class<?> && ((Class<?>) typeArgument).isPrimitive()) {
+		  throw new IllegalArgumentException();
+		}
       }
     }
 
@@ -403,7 +311,7 @@ final class Utils {
     }
 
     @Override public int hashCode() {
-      return Arrays.hashCode(typeArguments) ^ rawType.hashCode() ^ hashCodeOrZero(ownerType);
+      return Arrays.hashCode(typeArguments) ^ rawType.hashCode() ^ (ownerType != null ? ownerType.hashCode() : 0);
     }
 
     @Override public String toString() {
@@ -458,13 +366,19 @@ final class Utils {
 
       if (lowerBounds.length == 1) {
         if (lowerBounds[0] == null) throw new NullPointerException();
-        checkNotPrimitive(lowerBounds[0]);
+		Type type = lowerBounds[0];
+        if (type instanceof Class<?> && ((Class<?>) type).isPrimitive()) {
+		  throw new IllegalArgumentException();
+		}
         if (upperBounds[0] != Object.class) throw new IllegalArgumentException();
         this.lowerBound = lowerBounds[0];
         this.upperBound = Object.class;
       } else {
         if (upperBounds[0] == null) throw new NullPointerException();
-        checkNotPrimitive(upperBounds[0]);
+		Type type = upperBounds[0];
+        if (type instanceof Class<?> && ((Class<?>) type).isPrimitive()) {
+		  throw new IllegalArgumentException();
+		}
         this.lowerBound = null;
         this.upperBound = upperBounds[0];
       }

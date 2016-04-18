@@ -25,8 +25,8 @@ import okio.ForwardingSource;
 import okio.Okio;
 
 final class OkHttpCall<T> implements Call<T> {
-  private final ServiceMethod<T> serviceMethod;
-  private final Object[] args;
+  final ServiceMethod<T> serviceMethod;
+  final Object[] args;
 
   private volatile boolean canceled;
 
@@ -58,7 +58,7 @@ final class OkHttpCall<T> implements Call<T> {
       }
     }
     try {
-      return (rawCall = createRawCall()).request();
+      return (rawCall = serviceMethod.createRawCall(this)).request();
     } catch (RuntimeException e) {
       creationFailure = e;
       throw e;
@@ -82,7 +82,7 @@ final class OkHttpCall<T> implements Call<T> {
       failure = creationFailure;
       if (call == null && failure == null) {
         try {
-          call = rawCall = createRawCall();
+          call = rawCall = serviceMethod.createRawCall(this);
         } catch (Throwable t) {
           failure = creationFailure = t;
         }
@@ -159,7 +159,7 @@ final class OkHttpCall<T> implements Call<T> {
       call = rawCall;
       if (call == null) {
         try {
-          call = rawCall = createRawCall();
+          call = rawCall = serviceMethod.createRawCall(this);
         } catch (IOException | RuntimeException e) {
           creationFailure = e;
           throw e;
@@ -172,15 +172,6 @@ final class OkHttpCall<T> implements Call<T> {
     }
 
     return parseResponse(call.execute());
-  }
-
-  private okhttp3.Call createRawCall() throws IOException {
-    Request request = serviceMethod.toRequest(args);
-    okhttp3.Call call = serviceMethod.callFactory.newCall(request);
-    if (call == null) {
-      throw new NullPointerException("Call.Factory returned null.");
-    }
-    return call;
   }
 
   Response<T> parseResponse(okhttp3.Response rawResponse) throws IOException {

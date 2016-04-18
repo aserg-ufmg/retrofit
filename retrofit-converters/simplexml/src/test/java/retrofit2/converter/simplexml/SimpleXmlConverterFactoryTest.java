@@ -27,6 +27,7 @@ import org.simpleframework.xml.core.Persister;
 import org.simpleframework.xml.stream.Format;
 import org.simpleframework.xml.stream.HyphenStyle;
 import org.simpleframework.xml.stream.Verbosity;
+
 import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;

@@ -15,23 +15,21 @@
  */
 package retrofit2.converter.jackson;
 
-import com.fasterxml.jackson.databind.ObjectReader;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import java.io.IOException;
-import okhttp3.ResponseBody;
+
+import okhttp3.RequestBody;
 import retrofit2.Converter;
 
-final class JacksonResponseBodyConverter<T> implements Converter<ResponseBody, T> {
-  private final ObjectReader adapter;
+final class JacksonRequestConverter<T> implements Converter<T, RequestBody> {
+  private final ObjectWriter adapter;
 
-  JacksonResponseBodyConverter(ObjectReader adapter) {
+  JacksonRequestConverter(ObjectWriter adapter) {
     this.adapter = adapter;
   }
 
-  @Override public T convert(ResponseBody value) throws IOException {
-    try {
-      return adapter.readValue(value.charStream());
-    } finally {
-      value.close();
-    }
+  @Override public RequestBody convert(T value) throws IOException {
+    byte[] bytes = adapter.writeValueAsBytes(value);
+    return RequestBody.create(JacksonConverterFactory.MEDIA_TYPE, bytes);
   }
 }

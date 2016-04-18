@@ -21,6 +21,7 @@ import java.lang.reflect.Type;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
+
 import retrofit2.CallAdapter;
 import retrofit2.Response;
 import retrofit2.Retrofit;
@@ -94,17 +95,17 @@ public final class RxJavaCallAdapterFactoryTest {
     assertThat(factory.get(sResponseWildcard, NO_ANNOTATIONS, retrofit).responseType())
         .isEqualTo(String.class);
 
-    Type oResultClass = new TypeToken<Observable<Result<String>>>() {}.getType();
+    Type oResultClass = new TypeToken<Observable<RequestResult<String>>>() {}.getType();
     assertThat(factory.get(oResultClass, NO_ANNOTATIONS, retrofit).responseType())
         .isEqualTo(String.class);
-    Type sResultClass = new TypeToken<Single<Result<String>>>() {}.getType();
+    Type sResultClass = new TypeToken<Single<RequestResult<String>>>() {}.getType();
     assertThat(factory.get(sResultClass, NO_ANNOTATIONS, retrofit).responseType())
         .isEqualTo(String.class);
 
-    Type oResultWildcard = new TypeToken<Observable<Result<? extends String>>>() {}.getType();
+    Type oResultWildcard = new TypeToken<Observable<RequestResult<? extends String>>>() {}.getType();
     assertThat(factory.get(oResultWildcard, NO_ANNOTATIONS, retrofit).responseType())
         .isEqualTo(String.class);
-    Type sResultWildcard = new TypeToken<Single<Result<? extends String>>>() {}.getType();
+    Type sResultWildcard = new TypeToken<Single<RequestResult<? extends String>>>() {}.getType();
     assertThat(factory.get(sResultWildcard, NO_ANNOTATIONS, retrofit).responseType())
         .isEqualTo(String.class);
   }
@@ -150,7 +151,7 @@ public final class RxJavaCallAdapterFactoryTest {
   }
 
   @Test public void rawResultTypeThrows() {
-    Type observableType = new TypeToken<Observable<Result>>() {}.getType();
+    Type observableType = new TypeToken<Observable<RequestResult>>() {}.getType();
     try {
       factory.get(observableType, NO_ANNOTATIONS, retrofit);
       fail();
@@ -159,7 +160,7 @@ public final class RxJavaCallAdapterFactoryTest {
           "Result must be parameterized as Result<Foo> or Result<? extends Foo>");
     }
 
-    Type singleType = new TypeToken<Single<Result>>() {}.getType();
+    Type singleType = new TypeToken<Single<RequestResult>>() {}.getType();
     try {
       factory.get(singleType, NO_ANNOTATIONS, retrofit);
       fail();

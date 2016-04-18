@@ -18,6 +18,7 @@ package retrofit2.adapter.rxjava;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+
 import retrofit2.Call;
 import retrofit2.CallAdapter;
 import retrofit2.Response;
@@ -110,7 +111,7 @@ public final class RxJavaCallAdapterFactory extends CallAdapter.Factory {
       return new ResponseCallAdapter(responseType, scheduler);
     }
 
-    if (rawObservableType == Result.class) {
+    if (rawObservableType == RequestResult.class) {
       if (!(observableType instanceof ParameterizedType)) {
         throw new IllegalStateException("Result must be parameterized"
             + " as Result<Foo> or Result<? extends Foo>");
@@ -224,15 +225,15 @@ public final class RxJavaCallAdapterFactory extends CallAdapter.Factory {
       return responseType;
     }
 
-    @Override public <R> Observable<Result<R>> adapt(Call<R> call) {
-      Observable<Result<R>> observable = Observable.create(new CallOnSubscribe<>(call)) //
-          .map(new Func1<Response<R>, Result<R>>() {
-            @Override public Result<R> call(Response<R> response) {
-              return Result.response(response);
+    @Override public <R> Observable<RequestResult<R>> adapt(Call<R> call) {
+      Observable<RequestResult<R>> observable = Observable.create(new CallOnSubscribe<>(call)) //
+          .map(new Func1<Response<R>, RequestResult<R>>() {
+            @Override public RequestResult<R> call(Response<R> response) {
+              return RequestResult.response(response);
             }
-          }).onErrorReturn(new Func1<Throwable, Result<R>>() {
-            @Override public Result<R> call(Throwable throwable) {
-              return Result.error(throwable);
+          }).onErrorReturn(new Func1<Throwable, RequestResult<R>>() {
+            @Override public RequestResult<R> call(Throwable throwable) {
+              return RequestResult.error(throwable);
             }
           });
       if (scheduler != null) {

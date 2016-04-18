@@ -37,7 +37,7 @@ public final class ObservableTest {
   interface Service {
     @GET("/") Observable<String> body();
     @GET("/") Observable<Response<String>> response();
-    @GET("/") Observable<Result<String>> result();
+    @GET("/") Observable<RequestResult<String>> result();
   }
 
   private Service service;
@@ -116,8 +116,8 @@ public final class ObservableTest {
   @Test public void resultSuccess200() {
     server.enqueue(new MockResponse().setBody("Hi"));
 
-    BlockingObservable<Result<String>> o = service.result().toBlocking();
-    Result<String> result = o.first();
+    BlockingObservable<RequestResult<String>> o = service.result().toBlocking();
+    RequestResult<String> result = o.first();
     assertThat(result.isError()).isFalse();
     Response<String> response = result.response();
     assertThat(response.isSuccessful()).isTrue();
@@ -127,8 +127,8 @@ public final class ObservableTest {
   @Test public void resultSuccess404() throws IOException {
     server.enqueue(new MockResponse().setResponseCode(404).setBody("Hi"));
 
-    BlockingObservable<Result<String>> o = service.result().toBlocking();
-    Result<String> result = o.first();
+    BlockingObservable<RequestResult<String>> o = service.result().toBlocking();
+    RequestResult<String> result = o.first();
     assertThat(result.isError()).isFalse();
     Response<String> response = result.response();
     assertThat(response.isSuccessful()).isFalse();
@@ -138,8 +138,8 @@ public final class ObservableTest {
   @Test public void resultFailure() {
     server.enqueue(new MockResponse().setSocketPolicy(DISCONNECT_AFTER_REQUEST));
 
-    BlockingObservable<Result<String>> o = service.result().toBlocking();
-    Result<String> result = o.first();
+    BlockingObservable<RequestResult<String>> o = service.result().toBlocking();
+    RequestResult<String> result = o.first();
     assertThat(result.isError()).isTrue();
     assertThat(result.error()).isInstanceOf(IOException.class);
   }

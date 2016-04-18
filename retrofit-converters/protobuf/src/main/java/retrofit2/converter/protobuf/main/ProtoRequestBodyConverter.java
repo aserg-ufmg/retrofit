@@ -13,30 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package retrofit2.converter.protobuf;
+package retrofit2.converter.protobuf.main;
 
-import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.MessageLite;
-import com.google.protobuf.Parser;
 import java.io.IOException;
-import okhttp3.ResponseBody;
+import okhttp3.MediaType;
+import okhttp3.RequestBody;
 import retrofit2.Converter;
 
-final class ProtoResponseBodyConverter<T extends MessageLite>
-    implements Converter<ResponseBody, T> {
-  private final Parser<T> parser;
+final class ProtoRequestBodyConverter<T extends MessageLite> implements Converter<T, RequestBody> {
+  private static final MediaType MEDIA_TYPE = MediaType.parse("application/x-protobuf");
 
-  ProtoResponseBodyConverter(Parser<T> parser) {
-    this.parser = parser;
-  }
-
-  @Override public T convert(ResponseBody value) throws IOException {
-    try {
-      return parser.parseFrom(value.byteStream());
-    } catch (InvalidProtocolBufferException e) {
-      throw new RuntimeException(e); // Despite extending IOException, this is data mismatch.
-    } finally {
-      value.close();
-    }
+  @Override public RequestBody convert(T value) throws IOException {
+    byte[] bytes = value.toByteArray();
+    return RequestBody.create(MEDIA_TYPE, bytes);
   }
 }

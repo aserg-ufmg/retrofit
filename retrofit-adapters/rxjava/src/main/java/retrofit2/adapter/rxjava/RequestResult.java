@@ -19,21 +19,21 @@ import java.io.IOException;
 import retrofit2.Response;
 
 /** The result of executing an HTTP request. */
-public final class Result<T> {
-  public static <T> Result<T> error(Throwable error) {
+public final class RequestResult<T> {
+  public static <T> RequestResult<T> error(Throwable error) {
     if (error == null) throw new NullPointerException("error == null");
-    return new Result<>(null, error);
+    return new RequestResult<>(null, error);
   }
 
-  public static <T> Result<T> response(Response<T> response) {
+  public static <T> RequestResult<T> response(Response<T> response) {
     if (response == null) throw new NullPointerException("response == null");
-    return new Result<>(response, null);
+    return new RequestResult<>(response, null);
   }
 
   private final Response<T> response;
   private final Throwable error;
 
-  private Result(Response<T> response, Throwable error) {
+  private RequestResult(Response<T> response, Throwable error) {
     this.response = response;
     this.error = error;
   }

@@ -20,6 +20,9 @@ import com.google.gson.TypeAdapter;
 import com.google.gson.reflect.TypeToken;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import java.nio.charset.Charset;
+
+import okhttp3.MediaType;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import retrofit2.Converter;
@@ -51,6 +54,8 @@ public final class GsonConverterFactory extends Converter.Factory {
   }
 
   private final Gson gson;
+static final Charset UTF_8 = Charset.forName("UTF-8");
+static final MediaType MEDIA_TYPE = MediaType.parse("application/json; charset=UTF-8");
 
   private GsonConverterFactory(Gson gson) {
     if (gson == null) throw new NullPointerException("gson == null");

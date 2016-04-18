@@ -22,6 +22,7 @@ import java.lang.reflect.Type;
 import java.util.List;
 import java.util.concurrent.Executor;
 import okhttp3.Request;
+
 import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;

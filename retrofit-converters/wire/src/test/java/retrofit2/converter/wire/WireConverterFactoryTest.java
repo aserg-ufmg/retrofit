@@ -26,6 +26,7 @@ import okio.ByteString;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+
 import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;

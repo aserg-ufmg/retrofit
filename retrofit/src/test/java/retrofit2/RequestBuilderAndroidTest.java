@@ -21,6 +21,7 @@ import okhttp3.ResponseBody;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
+
 import retrofit2.http.GET;
 import retrofit2.http.Url;
 

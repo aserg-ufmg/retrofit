@@ -16,9 +16,10 @@
 package retrofit2.adapter.guava;
 
 import retrofit2.Response;
+import retrofit2.adapter.AdapterException;
 
 /** Exception for an unexpected, non-2xx HTTP response. */
-public final class HttpException extends Exception {
+public final class HttpException extends Exception implements AdapterException {
   private final int code;
   private final String message;
   private final transient Response<?> response;
@@ -30,20 +31,27 @@ public final class HttpException extends Exception {
     this.response = response;
   }
 
-  /** HTTP status code. */
-  public int code() {
+  /* (non-Javadoc)
+ * @see retrofit2.adapter.guava.ExceptionInfo#code()
+ */
+  @Override
+public int code() {
     return code;
   }
 
-  /** HTTP status message. */
-  public String message() {
+  /* (non-Javadoc)
+ * @see retrofit2.adapter.guava.ExceptionInfo#message()
+ */
+  @Override
+public String message() {
     return message;
   }
 
-  /**
-   * The full HTTP response. This may be null if the exception was serialized.
-   */
-  public Response<?> response() {
+  /* (non-Javadoc)
+ * @see retrofit2.adapter.guava.ExceptionInfo#response()
+ */
+  @Override
+public Response<?> response() {
     return response;
   }
 }
